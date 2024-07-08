@@ -15,10 +15,10 @@ router.post("/createbooking", fetchUser, async (req, res) => {
   try {
     // Get request body data
     const { turfId, date, startTime, endTime } = req.body;
+    const userId = req.user.id;
     // Retrieve Turf details including rate
     const turf = await Turf.findById(turfId);
-    const user = await User.findById(req.user.id);
-    console.log(userId);
+    const user = await User.findById(userId);
     if (!turf) {
       return res.status(404).json({ message: "Turf not found" });
     }
@@ -27,8 +27,7 @@ router.post("/createbooking", fetchUser, async (req, res) => {
     const turfName = turf.name;
     const userName = user.name;
     // Convert date to the server's time zone (assuming the server is in UTC)
-    const serverDate = moment.utc(date).tz("America/New_York");
-
+    const serverDate = moment.utc(date).tz("Asia/Kolkata");
     // Check if there is any existing booking that collides with the new booking
     const collidingBooking = await Booking.findOne({
       turf: turfId,
@@ -60,14 +59,13 @@ router.post("/createbooking", fetchUser, async (req, res) => {
         price *
         moment(endTime, "HH:mm").diff(moment(startTime, "HH:mm"), "hours"), // Set remaining amount same as price
     });
-
     // Save the new booking to the database
     await newBooking.save();
 
     // Update slot availability in the Turf database for the selected range
     turf.daySlots.forEach((daySlot) => {
       // Convert day slot date to server's time zone
-      const slotDate = moment.utc(daySlot.date).tz("America/New_York");
+      const slotDate = moment.utc(daySlot.date).tz("Asia/Kolkata");
 
       // Compare dates using moment's isSame method
       if (slotDate.isSame(serverDate, "day")) {
@@ -77,6 +75,7 @@ router.post("/createbooking", fetchUser, async (req, res) => {
           const slotEndTime = moment(slot.endTime, "HH:mm");
           const bookingStartTime = moment(startTime, "HH:mm");
           const bookingEndTime = moment(endTime, "HH:mm");
+
           if (
             slotStartTime.isSameOrAfter(bookingStartTime) &&
             slotEndTime.isSameOrBefore(bookingEndTime)
@@ -90,7 +89,7 @@ router.post("/createbooking", fetchUser, async (req, res) => {
     // Save the updated Turf document in the database
     await turf.save();
 
-    res.status(201).json({
+    res.status(200).json({
       message: "Booking created successfully",
       booking: newBooking,
     });

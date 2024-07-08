@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 class Turf {
@@ -71,8 +69,7 @@ class TurfCard extends StatelessWidget {
                     'Booking Hours: ${turf.booking_start} - ${turf.booking_end}'),
                 SizedBox(height: 5),
                 // Handling location display
-                if (turf.location != null &&
-                    turf.location.containsKey('streetName') &&
+                if (turf.location.containsKey('streetName') &&
                     turf.location.containsKey('city'))
                   Text(
                       'Location: ${turf.location["streetName"].join(", ")}, ${turf.location["city"]}'),

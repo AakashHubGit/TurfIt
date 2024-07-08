@@ -81,7 +81,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
           context, '/adminDashboard', (Route<dynamic> route) => false);
     } else {
       Navigator.pushNamedAndRemoveUntil(
-          context, '/Home', (Route<dynamic> route) => false);
+          context, '/home', (Route<dynamic> route) => false);
     }
   }
 
