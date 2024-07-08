@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import '../constant.dart';
 
 const DEVANSH_IP = '192.168.1.3';
 
@@ -13,7 +14,7 @@ class PaymentScreen extends StatelessWidget {
   Future<void> handlePaymentApproval(BuildContext context) async {
     try {
       final response = await http.put(
-        Uri.parse('http://localhost:5000/api/booking/${booking['_id']}'),
+        Uri.parse('${Constants.DEVANSH_IP}/api/booking/${booking['_id']}'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

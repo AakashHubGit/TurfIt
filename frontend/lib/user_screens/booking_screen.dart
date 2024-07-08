@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -21,7 +20,6 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
   List<Slot> availableSlots = [];
   List<Slot> bookedSlots = [];
   DateTime date = DateTime.now();
-  bool showDatePicker = false;
   Slot? startSlot;
   Slot? endSlot;
   bool loading = true;
@@ -95,21 +93,38 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
     setState(() {
       date = selectedDate;
       fetchData();
-      showDatePicker = false;
     });
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: date,
+      firstDate: DateTime.now().subtract(Duration(days: 1)),
+      lastDate: DateTime.now().add(Duration(days: 30)),
+    );
+    if (picked != null && picked != date) handleDateChange(picked);
   }
 
   void handleSlotSelection(Slot slot) {
     setState(() {
-      if (startSlot == null ||
-          (startSlot != null && slot.startTime == startSlot!.endTime)) {
-        startSlot = startSlot ?? slot;
-        endSlot = slot;
-      } else if (slot.startTime == endSlot!.endTime) {
-        endSlot = slot;
-      } else {
+      if (startSlot == null || endSlot == null) {
         startSlot = slot;
         endSlot = slot;
+      } else {
+        final slotStartTime = DateFormat.Hm().parse(slot.startTime);
+        final slotEndTime = DateFormat.Hm().parse(slot.endTime);
+        final startSlotTime = DateFormat.Hm().parse(startSlot!.startTime);
+        final endSlotTime = DateFormat.Hm().parse(endSlot!.endTime);
+
+        if (slotStartTime.isAtSameMomentAs(endSlotTime)) {
+          endSlot = slot;
+        } else if (slotEndTime.isAtSameMomentAs(startSlotTime)) {
+          startSlot = slot;
+        } else {
+          startSlot = slot;
+          endSlot = slot;
+        }
       }
     });
   }
@@ -122,18 +137,19 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
   }
 
   bool isSlotInRange(Slot slot) {
-    return (DateFormat.Hm()
-                .parse(slot.startTime)
-                .isAfter(DateFormat.Hm().parse(startSlot!.startTime)) &&
-            DateFormat.Hm()
-                .parse(slot.endTime)
-                .isBefore(DateFormat.Hm().parse(endSlot!.endTime))) ||
-        (DateFormat.Hm()
-                .parse(slot.startTime)
-                .isBefore(DateFormat.Hm().parse(startSlot!.startTime)) &&
-            DateFormat.Hm()
-                .parse(slot.endTime)
-                .isAfter(DateFormat.Hm().parse(endSlot!.endTime)));
+    if (startSlot == null || endSlot == null) return false;
+
+    final slotStartTime = DateFormat.Hm().parse(slot.startTime);
+    final slotEndTime = DateFormat.Hm().parse(slot.endTime);
+    final startSlotTime = DateFormat.Hm().parse(startSlot!.startTime);
+    final endSlotTime = DateFormat.Hm().parse(endSlot!.endTime);
+
+    return slotStartTime.isAtSameMomentAs(startSlotTime) ||
+        slotEndTime.isAtSameMomentAs(endSlotTime) ||
+        (slotStartTime.isAfter(startSlotTime) &&
+            slotEndTime.isBefore(endSlotTime)) ||
+        (slotStartTime.isBefore(startSlotTime) &&
+            slotEndTime.isAfter(endSlotTime));
   }
 
   Future<void> handleBooking() async {
@@ -209,24 +225,12 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
                     ),
                     SizedBox(height: 10),
                     GestureDetector(
-                      onTap: () => setState(() => showDatePicker = true),
+                      onTap: () => _selectDate(context),
                       child: Text(
                         DateFormat.yMMMMd().format(date),
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
-                    if (showDatePicker)
-                      Container(
-                        height: 200,
-                        child: CupertinoDatePicker(
-                          mode: CupertinoDatePickerMode.date,
-                          initialDateTime: date,
-                          minimumDate:
-                              DateTime.now().subtract(Duration(days: 1)),
-                          maximumDate: DateTime.now().add(Duration(days: 30)),
-                          onDateTimeChanged: handleDateChange,
-                        ),
-                      ),
                     SizedBox(height: 20),
 
                     // Available Slots Section
@@ -248,9 +252,7 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
                       itemCount: availableSlots.length,
                       itemBuilder: (context, index) {
                         Slot slot = availableSlots[index];
-                        bool isSelected = startSlot != null &&
-                            endSlot != null &&
-                            isSlotInRange(slot);
+                        bool isSelected = isSlotInRange(slot);
 
                         return GestureDetector(
                           onTap: () => handleSlotSelection(slot),
@@ -267,7 +269,11 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
                             child: Center(
                               child: Text(
                                 '${DateFormat.jm().format(DateFormat.Hm().parse(slot.startTime))} - ${DateFormat.jm().format(DateFormat.Hm().parse(slot.endTime))}',
-                                style: TextStyle(fontSize: 16),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color:
+                                      isSelected ? Colors.white : Colors.black,
+                                ),
                               ),
                             ),
                           ),

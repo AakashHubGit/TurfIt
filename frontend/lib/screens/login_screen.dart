@@ -3,6 +3,7 @@ import 'package:flutter_swiper_null_safety/flutter_swiper_null_safety.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../constant.dart';
 
 const DEVANSH_IP = '192.168.1.3'; // Replace with your actual IP address
 
@@ -11,7 +12,7 @@ class LoginScreen extends StatelessWidget {
       BuildContext context) async {
     final response = await http.post(
       Uri.parse(
-          'http://localhost:5000/api/auth/${userType == "player" ? "loginuser" : "loginadmin"}'),
+          '${Constants.DEVANSH_IP}/api/auth/${userType == "player" ? "loginuser" : "loginadmin"}'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

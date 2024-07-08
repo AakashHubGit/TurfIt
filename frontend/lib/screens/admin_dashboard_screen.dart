@@ -7,6 +7,7 @@ import 'package:turf_it/screens/analytics_screen.dart';
 import 'package:turf_it/screens/accounts_screen.dart';
 import 'package:turf_it/screens/payment_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constant.dart';
 
 const DEVANSH_IP = '192.168.1.3'; // Replace with your actual IP address
 
@@ -35,7 +36,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       final authToken = prefs.getString('authToken') ?? '';
       // Fetch admin details
       final adminResponse = await http.get(
-        Uri.parse('http://localhost:5000/api/auth/getadmin'),
+        Uri.parse('${Constants.DEVANSH_IP}/api/auth/getadmin'),
         headers: {
           'authToken': authToken,
         },
@@ -44,7 +45,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
       // Fetch turf details
       final turfResponse = await http.get(
-        Uri.parse('http://localhost:5000/api/turf/adminturf'),
+        Uri.parse('${Constants.DEVANSH_IP}/api/turf/adminturf'),
         headers: {
           'authToken': authToken,
         },
@@ -72,7 +73,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       List<dynamic> allBookings = [];
       for (var turf in turfs) {
         final response = await http.get(Uri.parse(
-            'http://localhost:5000/api/booking/today/${turf['_id']}/$formattedDate'));
+            '${Constants.DEVANSH_IP}/api/booking/today/${turf['_id']}/$formattedDate'));
         final List<dynamic> fetchedBookings = jsonDecode(response.body);
         allBookings.addAll(fetchedBookings);
       }
@@ -327,7 +328,7 @@ class _TurfCardState extends State<TurfCard> {
     try {
       String formattedDate = DateTime.now().toString().substring(0, 10);
       final response = await http.get(Uri.parse(
-          'http://localhost:5000/api/booking/today/${widget.turf['_id']}/$formattedDate'));
+          '${Constants.DEVANSH_IP}/api/booking/today/${widget.turf['_id']}/$formattedDate'));
       final List<dynamic> fetchedBookings = jsonDecode(response.body);
 
       fetchedBookings.sort((a, b) => a['startTime'].compareTo(b['startTime']));

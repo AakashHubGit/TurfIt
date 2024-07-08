@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../constant.dart';
 
 const DEVANSH_IP = '192.168.1.3';
 
@@ -38,7 +39,7 @@ class _TurfSlotsState extends State<TurfSlots> {
 
       var response = await http.post(
         Uri.parse(
-            'http://localhost:5000/api/turf/slots/${widget.turf['_id']}/$formattedDate'), // Pass date in the URL params
+            '${Constants.DEVANSH_IP}/api/turf/slots/${widget.turf['_id']}/$formattedDate'), // Pass date in the URL params
       );
       if (response.statusCode == 200) {
         setState(() {
@@ -54,8 +55,8 @@ class _TurfSlotsState extends State<TurfSlots> {
 
   fetchOffUsers() async {
     try {
-      var response =
-          await http.get(Uri.parse('http://localhost:5000/api/auth/offusers'));
+      var response = await http
+          .get(Uri.parse('${Constants.DEVANSH_IP}/api/auth/offusers'));
       setState(() {
         offUsers = json.decode(response.body);
       });
@@ -131,7 +132,7 @@ class _TurfSlotsState extends State<TurfSlots> {
       }
 
       var response = await http.post(
-        Uri.parse('http://localhost:5000/api/booking/createofflinebooking'),
+        Uri.parse('${Constants.DEVANSH_IP}/api/booking/createofflinebooking'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'turfId': widget.turf['_id'],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constant.dart';
 
 const DEVANSH_IP = '192.168.1.3'; // Replace with your actual IP address
 
@@ -27,7 +28,7 @@ class _AnalyticsState extends State<Analytics> {
 
     try {
       final turfResponse = await http.get(
-        Uri.parse('http://localhost:5000/api/turf/adminturf'),
+        Uri.parse('${Constants.DEVANSH_IP}/api/turf/adminturf'),
         headers: {
           'authToken': authToken,
         },
@@ -36,7 +37,7 @@ class _AnalyticsState extends State<Analytics> {
       final turfData = jsonDecode(turfResponse.body);
 
       final analyticsResponse = await http.get(Uri.parse(
-          'http://localhost:5000/api/turf/getTurfAnalytics/${turfData['_id']}'));
+          '${Constants.DEVANSH_IP}/api/turf/getTurfAnalytics/${turfData['_id']}'));
 
       setState(() {
         turf = turfData;

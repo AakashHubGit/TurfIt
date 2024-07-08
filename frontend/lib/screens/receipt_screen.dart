@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../constant.dart';
 
 const DEVANSH_IP = '192.168.1.3'; // Replace with your actual IP address
 
@@ -31,8 +32,8 @@ class _ReceiptPageState extends State<ReceiptPage> {
       final response = await http.get(
         Uri.parse(
           user == "Owner"
-              ? 'http://localhost:5000/api/auth/getoffuser/$userId'
-              : 'http://localhost:5000/api/auth/getuser/$userId',
+              ? '${Constants.DEVANSH_IP}/api/auth/getoffuser/$userId'
+              : '${Constants.DEVANSH_IP}/api/auth/getuser/$userId',
         ),
       );
       final data = json.decode(response.body);
@@ -47,7 +48,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
   void fetchTurfName(String turfId) async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:5000/api/turf/getturf/$turfId'),
+        Uri.parse('${Constants.DEVANSH_IP}/api/turf/getturf/$turfId'),
       );
       final data = json.decode(response.body);
       setState(() {

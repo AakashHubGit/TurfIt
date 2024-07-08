@@ -23,10 +23,17 @@ class TurfDetail extends StatelessWidget {
               child: PageView.builder(
                 itemCount: turf.imgPath.length,
                 itemBuilder: (context, index) {
-                  return Image.network(
-                    "assets/${turf.imgPath[index]}",
-                    width: double.infinity,
-                    fit: BoxFit.cover,
+                  return Container(
+                    margin: EdgeInsets.all(5),
+                    width: 300,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      image: DecorationImage(
+                        image: AssetImage('assets/' + turf.imgPath[index]),
+                        // image: NetworkImage("assets/" + turf.imgPath[index]),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   );
                 },
               ),

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import './turf_detail_screen.dart';
+import '../screens/accounts_screen.dart'; // Import the AccountScreen
 import 'package:turf_it/models/turf.dart';
+import '../constant.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -28,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> fetchTurfs() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:5000/api/turf/allturf'),
+        Uri.parse('${Constants.DEVANSH_IP}/api/turf/allturf'),
       );
 
       if (response.statusCode == 200) {
@@ -106,6 +108,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AccountScreen(),
+            ),
+          );
+        },
+        child: Icon(Icons.account_circle),
+      ),
     );
   }
 }
@@ -135,7 +148,8 @@ class TurfCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     image: DecorationImage(
-                      image: NetworkImage("assets/" + turf.imgPath[index]),
+                      image: AssetImage('assets/' + turf.imgPath[index]),
+                      // image: NetworkImage("assets/" + turf.imgPath[index]),
                       fit: BoxFit.cover,
                     ),
                   ),

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constant.dart';
 
 const DEVANSH_IP = '192.168.1.3'; // Replace with your actual IP address
 
@@ -121,7 +122,7 @@ class _UpcomingBookingState extends State<UpcomingBooking> {
 
     try {
       final turfResponse = await http.get(
-        Uri.parse('http://localhost:5000/api/turf/adminturf'),
+        Uri.parse('${Constants.DEVANSH_IP}/api/turf/adminturf'),
         headers: {
           'authToken': authToken,
         },
@@ -130,7 +131,7 @@ class _UpcomingBookingState extends State<UpcomingBooking> {
       final turfData = jsonDecode(turfResponse.body);
 
       final bookingResponse = await http.get(Uri.parse(
-          'http://localhost:5000/api/booking/getNext5DaysBookings/${turfData['_id']}'));
+          '${Constants.DEVANSH_IP}/api/booking/getNext5DaysBookings/${turfData['_id']}'));
 
       setState(() {
         bookings = jsonDecode(bookingResponse.body)['bookings'];
