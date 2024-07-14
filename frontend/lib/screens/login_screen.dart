@@ -133,10 +133,11 @@ class PlayerLogin extends StatefulWidget {
   final VoidCallback handleRegister;
   final VoidCallback handleForgotPassword;
 
-  PlayerLogin(
-      {required this.handleLogin,
-      required this.handleRegister,
-      required this.handleForgotPassword});
+  PlayerLogin({
+    required this.handleLogin,
+    required this.handleRegister,
+    required this.handleForgotPassword,
+  });
 
   @override
   _PlayerLoginState createState() => _PlayerLoginState();
@@ -146,10 +147,24 @@ class _PlayerLoginState extends State<PlayerLogin> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   bool showPassword = false;
+  bool isLoading = false; // Track loading state
 
   void handleShowPassword() {
     setState(() {
       showPassword = !showPassword;
+    });
+  }
+
+  void handleLogin() {
+    setState(() {
+      isLoading = true; // Set loading state to true when login starts
+    });
+    widget
+        .handleLogin(emailController.text, passwordController.text)
+        .catchError((error) {
+      setState(() {
+        isLoading = false; // Set loading state to false if there's an error
+      });
     });
   }
 
@@ -196,9 +211,11 @@ class _PlayerLoginState extends State<PlayerLogin> {
           ),
           SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () => widget.handleLogin(
-                emailController.text, passwordController.text),
-            child: Text("Login"),
+            onPressed:
+                isLoading ? null : handleLogin, // Disable button when loading
+            child: isLoading
+                ? CircularProgressIndicator() // Show loader when loading
+                : Text("Login"),
           ),
           SizedBox(height: 10),
           TextButton(
@@ -220,10 +237,11 @@ class OwnerLogin extends StatefulWidget {
   final VoidCallback handleRegister;
   final VoidCallback handleForgotPassword;
 
-  OwnerLogin(
-      {required this.handleLogin,
-      required this.handleRegister,
-      required this.handleForgotPassword});
+  OwnerLogin({
+    required this.handleLogin,
+    required this.handleRegister,
+    required this.handleForgotPassword,
+  });
 
   @override
   _OwnerLoginState createState() => _OwnerLoginState();
@@ -233,10 +251,24 @@ class _OwnerLoginState extends State<OwnerLogin> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   bool showPassword = false;
+  bool isLoading = false; // Track loading state
 
   void handleShowPassword() {
     setState(() {
       showPassword = !showPassword;
+    });
+  }
+
+  void handleLogin() {
+    setState(() {
+      isLoading = true; // Set loading state to true when login starts
+    });
+    widget
+        .handleLogin(emailController.text, passwordController.text)
+        .catchError((error) {
+      setState(() {
+        isLoading = false; // Set loading state to false if there's an error
+      });
     });
   }
 
@@ -274,17 +306,20 @@ class _OwnerLoginState extends State<OwnerLogin> {
               labelText: "Password",
               border: OutlineInputBorder(),
               suffixIcon: IconButton(
-                  icon: Icon(
-                      showPassword ? Icons.visibility : Icons.visibility_off),
-                  onPressed: handleShowPassword),
+                icon: Icon(
+                    showPassword ? Icons.visibility : Icons.visibility_off),
+                onPressed: handleShowPassword,
+              ),
             ),
             obscureText: !showPassword,
           ),
           SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () => widget.handleLogin(
-                emailController.text, passwordController.text),
-            child: Text("Login"),
+            onPressed:
+                isLoading ? null : handleLogin, // Disable button when loading
+            child: isLoading
+                ? CircularProgressIndicator() // Show loader when loading
+                : Text("Login"),
           ),
           SizedBox(height: 10),
           TextButton(

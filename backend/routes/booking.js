@@ -13,64 +13,57 @@ router.use(express.json());
 
 router.post("/createbooking", fetchUser, async (req, res) => {
   try {
-    // Get request body data
-    const { turfId, date, startTime, endTime } = req.body;
+    const { turfId, date, startTime, endTime, requestedPlayers } = req.body;
     const userId = req.user.id;
-    // Retrieve Turf details including rate
     const turf = await Turf.findById(turfId);
     const user = await User.findById(userId);
     if (!turf) {
       return res.status(404).json({ message: "Turf not found" });
     }
-    // Calculate price based on Turf rate
+
     const price = turf.rate;
     const turfName = turf.name;
     const userName = user.name;
-    // Convert date to the server's time zone (assuming the server is in UTC)
     const serverDate = moment.utc(date).tz("Asia/Kolkata");
-    // Check if there is any existing booking that collides with the new booking
+
     const collidingBooking = await Booking.findOne({
       turf: turfId,
-      date: serverDate.toDate(), // Convert moment object back to JavaScript Date
+      date: serverDate.toDate(),
       $or: [
-        { startTime: { $lt: endTime }, endTime: { $gt: startTime } }, // Collision check
+        { startTime: { $lt: endTime }, endTime: { $gt: startTime } },
         { startTime: { $eq: startTime }, endTime: { $eq: endTime } },
       ],
     });
 
-    // If there is a collision, return an error
     if (collidingBooking) {
       return res.status(400).json({ message: "Booking collision detected" });
     }
 
-    // Create a new booking for the entire range
     const newBooking = new Booking({
       turf: turfId,
       turfName: turfName,
       user: userId,
       userName: userName,
-      date: serverDate.toDate(), // Convert moment object back to JavaScript Date
+      date: serverDate.toDate(),
       startTime: startTime,
       endTime: endTime,
       price:
         price *
-        moment(endTime, "HH:mm").diff(moment(startTime, "HH:mm"), "hours"), // Calculate price for the entire range
+        moment(endTime, "HH:mm").diff(moment(startTime, "HH:mm"), "hours"),
       rem_amount:
         price *
-        moment(endTime, "HH:mm").diff(moment(startTime, "HH:mm"), "hours"), // Set remaining amount same as price
+        moment(endTime, "HH:mm").diff(moment(startTime, "HH:mm"), "hours"),
+      requestedPlayers: requestedPlayers,
+      joinedPlayers: [],
     });
-    // Save the new booking to the database
+
     await newBooking.save();
 
-    // Update slot availability in the Turf database for the selected range
     turf.daySlots.forEach((daySlot) => {
-      // Convert day slot date to server's time zone
       const slotDate = moment.utc(daySlot.date).tz("Asia/Kolkata");
 
-      // Compare dates using moment's isSame method
       if (slotDate.isSame(serverDate, "day")) {
         daySlot.slots.forEach((slot) => {
-          // Check if the slot falls within the selected range
           const slotStartTime = moment(slot.startTime, "HH:mm");
           const slotEndTime = moment(slot.endTime, "HH:mm");
           const bookingStartTime = moment(startTime, "HH:mm");
@@ -86,7 +79,6 @@ router.post("/createbooking", fetchUser, async (req, res) => {
       }
     });
 
-    // Save the updated Turf document in the database
     await turf.save();
 
     res.status(200).json({
@@ -222,17 +214,14 @@ router.get("/getNext5DaysBookings/:turfId", async (req, res) => {
   try {
     const { turfId } = req.params;
 
-    // Check if the turf exists
     const turf = await Turf.findById(turfId);
     if (!turf) {
       return res.status(404).json({ message: "Turf not found" });
     }
-    console.log(turf);
-    // Get the current date and the date 5 days in the future
-    const startDate = moment().startOf("day"); // Current date at the start of the day
-    const endDate = moment().add(5, "days").endOf("day"); // 5 days from now at the end of the day
 
-    // Find bookings that fall within this date range and for the specified turf
+    const startDate = moment.tz("Asia/Kolkata").startOf("day");
+    const endDate = moment.tz("Asia/Kolkata").add(5, "days").endOf("day");
+
     const bookings = await Booking.find({
       turf: turfId,
       date: {
@@ -241,10 +230,8 @@ router.get("/getNext5DaysBookings/:turfId", async (req, res) => {
       },
     })
       .populate("turf")
-      .populate("user"); // Populate turf and user details for a more comprehensive response
+      .populate("user");
 
-    // Return the bookings in the response
-    console.log(bookings);
     res
       .status(200)
       .json({ message: "Bookings retrieved successfully", bookings });
@@ -263,7 +250,6 @@ router.get("/getTurfBookings/:turfId", async (req, res) => {
     if (!turf) {
       return res.status(404).json({ message: "Turf not found" });
     }
-    console.log(turf);
     // Get the current date and the date 5 days in the future
 
     // Find bookings that fall within this date range and for the specified turf
@@ -333,6 +319,50 @@ router.get("/upcomingbookings", fetchUser, async (req, res) => {
   } catch (error) {
     console.error(error.message);
     res.status(500).send("Unexpected error occurred");
+  }
+});
+
+router.post("/joinbooking", fetchUser, async (req, res) => {
+  try {
+    const { bookingId, playersCount } = req.body;
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (playersCount > booking.requestedPlayers) {
+      return res
+        .status(400)
+        .json({ message: "Requested players exceed the needed players" });
+    }
+
+    booking.joinedPlayers.push({
+      user: userId,
+      userName: user.name,
+      playersCount: playersCount,
+    });
+
+    booking.requestedPlayers -= playersCount;
+
+    const totalPlayers = booking.joinedPlayers.reduce(
+      (total, join) => total + join.playersCount,
+      1
+    );
+    const newPrice = booking.price / totalPlayers;
+    booking.rem_amount = newPrice;
+
+    await booking.save();
+
+    res.status(200).json({
+      message: "Successfully joined the booking",
+      booking,
+    });
+  } catch (error) {
+    console.error("Error joining booking:", error);
+    res.status(500).json({ message: "Unexpected error occurred" });
   }
 });
 

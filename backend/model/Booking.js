@@ -38,6 +38,17 @@ const BookingSchema = new Schema({
     type: Number,
     required: true,
   },
+  requestedPlayers: {
+    type: Number,
+    required: true,
+  },
+  joinedPlayers: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
+      userName: String,
+      playersCount: Number,
+    },
+  ],
 });
 
 const Booking = mongoose.model("booking", BookingSchema);
