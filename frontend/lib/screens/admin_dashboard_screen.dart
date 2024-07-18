@@ -1,5 +1,8 @@
+
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:turf_it/screens/skeleton.dart';
 import 'dart:convert';
 import 'package:turf_it/screens/slot_booking_screen.dart';
 import 'package:turf_it/screens/upcoming_booking_screen.dart';
@@ -11,6 +14,8 @@ import '../constant.dart';
 
 const DEVANSH_IP = '192.168.1.3'; // Replace with your actual IP address
 
+
+
 class AdminDashboardScreen extends StatefulWidget {
   @override
   _AdminDashboardScreenState createState() => _AdminDashboardScreenState();
@@ -19,6 +24,7 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   dynamic admin = {};
   List<dynamic> turfs = [];
+  bool isloading=false;
   double totalEarnings = 0;
   double receivedAmount = 0;
   double remainingPayment = 0;
@@ -34,6 +40,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       final authToken = prefs.getString('authToken') ?? '';
+      isloading=true;
       // Fetch admin details
       final adminResponse = await http.get(
         Uri.parse('${Constants.DEVANSH_IP}/api/auth/getadmin'),
@@ -57,6 +64,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       // Update state with fetched data
       setState(() {
         admin = adminData;
+        isloading=false;
         turfs = turfData;
       });
 
@@ -107,9 +115,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-  title: Row(
+  title: Row( 
     children: [
-      Text('Admin Dashboard'),
+      Text(
+                    'Welcome,',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                   Text(
+                    admin['name'] ?? '',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
       Spacer(),
       GestureDetector(
         onTap: () {
@@ -123,7 +138,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       ),
     ],
   ),
-  backgroundColor:Colors.green[600],
+  backgroundColor:Color.fromARGB(255, 241, 255, 241),
 ),
 
       body: SingleChildScrollView(
@@ -137,14 +152,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Welcome,',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    admin['name'] ?? '',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
+                  
+                 
                 ],
               ),
             ),
@@ -155,7 +164,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Color.fromARGB(255, 193, 206, 192).withOpacity(0.3), // Shadow color
+            color: Color.fromARGB(255, 255, 255, 255).withOpacity(0.3), // Shadow color
             spreadRadius: 2,
             blurRadius: 5,
             offset: Offset(0, 3), // Changes the position of the shadow
@@ -172,7 +181,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           );
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color.fromARGB(255, 84, 255, 50), // Green shade
+          backgroundColor: Color.fromARGB(255, 255, 255, 255), // Green shade
         ),
         child: Text('Notifications'),
       ),
@@ -245,11 +254,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   return renderDashboard();
                 }
                 dynamic item = turfs[index - 1];
-                return TurfCard(
+                return !isloading? TurfCard(
+                  
                   turf: item,
-                );
+                ):
+                Skeleton(width: 200, height: 200,);
               },
-            ),
+            ),   
           ],
         ),
       ),
@@ -261,7 +272,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       margin: EdgeInsets.all(16),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color.fromARGB(255, 144, 255, 144), // Green background color
+        color: Color.fromARGB(255, 255, 255, 255), // Green background color
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
@@ -345,7 +356,12 @@ class Blob extends StatelessWidget {
             blurRadius: 5,
             offset: Offset(0, 3), // Changes the position of the shadow
           ),
+
         ],
+        border: Border.all(
+          color: Colors.black12,
+          width: 2.0
+        )
       ),
       child: Row(
         children: [
@@ -413,7 +429,7 @@ class _TurfCardState extends State<TurfCard> {
       margin: EdgeInsets.all(16),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color:  Color.fromARGB(255, 144, 255, 144), // Green background color
+        color:  Color.fromARGB(255, 255, 255, 255), // Green background color
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
@@ -429,7 +445,7 @@ class _TurfCardState extends State<TurfCard> {
         
         
         children: [
-          Icon(Icons.sports_cricket_rounded, color: Colors.black), // Dashboard icon
+          Icon(Icons.sports_cricket_rounded, color: Colors.black), 
               SizedBox(width: 8),
               Text(
                 widget.turf['name'],
