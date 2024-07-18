@@ -105,9 +105,25 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Admin Dashboard'),
-        backgroundColor: Colors.green,
+  title: Row(
+    children: [
+      Text('Admin Dashboard'),
+      Spacer(),
+      GestureDetector(
+        onTap: () {
+          // Add your profile changing functionality here
+        },
+        child: CircleAvatar(
+          backgroundImage: AssetImage('assets/default_profile_pic.png'), // Replace with actual image
+          radius: 16,
+          child: Icon(Icons.person_2_rounded, size: 16, color: const Color.fromARGB(255, 0, 0, 0)),
+        ),
       ),
+    ],
+  ),
+  backgroundColor:Colors.green[600],
+),
+
       body: SingleChildScrollView(
         physics:
             AlwaysScrollableScrollPhysics(), // Allow scrolling when list is small
@@ -131,43 +147,93 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
             ),
             ButtonBar(
-              alignment: MainAxisAlignment.start,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => UpcomingBooking(),
-                      ),
-                    );
-                  },
-                  child: Text('Notifications'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Analytics(),
-                      ),
-                    );
-                  },
-                  child: Text('Analytics'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AccountScreen(),
-                      ),
-                    );
-                  },
-                  child: Text('Accounts'),
-                ),
-              ],
+  alignment: MainAxisAlignment.start,
+  children: [
+    Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Color.fromARGB(255, 193, 206, 192).withOpacity(0.3), // Shadow color
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: Offset(0, 3), // Changes the position of the shadow
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UpcomingBooking(),
             ),
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Color.fromARGB(255, 84, 255, 50), // Green shade
+        ),
+        child: Text('Notifications'),
+      ),
+    ),
+    SizedBox(width: 8), // Adjust spacing as needed
+    Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Color.fromARGB(255, 187, 187, 186).withOpacity(0.3), // Shadow color
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: Offset(0, 3), // Changes the position of the shadow
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Analytics(),
+            ),
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Color.fromARGB(255, 197, 255, 178), // Green shade
+        ),
+        child: Text('Analytics'),
+      ),
+    ),
+    SizedBox(width: 8), // Adjust spacing as needed
+    Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Color.fromARGB(255, 255, 255, 255).withOpacity(0.3), // Shadow color
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: Offset(0, 3), // Changes the position of the shadow
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AccountScreen(),
+            ),
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Color.fromARGB(255, 255, 255, 255), // Green shade
+        ),
+        child: Text('Accounts'),
+        
+        
+      ),
+    ),
+  ],
+),
+
             ListView.builder(
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
@@ -193,7 +259,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       margin: EdgeInsets.all(16),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.green[200], // Green background color
+        color: Color.fromARGB(255, 144, 255, 144), // Green background color
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
@@ -234,7 +300,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.black), // Text color
+                color: Color.fromARGB(255, 0, 0, 0)), // Text color
           ),
           SizedBox(height: 16),
           Row(
@@ -268,11 +334,11 @@ class Blob extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.green[100], // Green background color
+        color: const Color.fromARGB(255, 255, 255, 255), // Green background color
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2), // Black shadow color
+            color: Color.fromARGB(255, 255, 255, 255).withOpacity(0.2), // Black shadow color
             spreadRadius: 2,
             blurRadius: 5,
             offset: Offset(0, 3), // Changes the position of the shadow
@@ -345,7 +411,7 @@ class _TurfCardState extends State<TurfCard> {
       margin: EdgeInsets.all(16),
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.green[100], // Green background color
+        color:  Color.fromARGB(255, 144, 255, 144), // Green background color
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
@@ -356,17 +422,22 @@ class _TurfCardState extends State<TurfCard> {
           ),
         ],
       ),
+    
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        
+        
         children: [
-          Text(
-            widget.turf['name'],
-            style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-                fontFamily: 'Roboto'), // Text color and font family
-          ),
+          Icon(Icons.sports_cricket_rounded, color: Colors.black), // Dashboard icon
+              SizedBox(width: 8),
+              Text(
+                widget.turf['name'],
+                style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black), // Text color
+              ),
+          
+    
           SizedBox(height: 8),
           Text('Size: ${widget.turf['size'][0]}',
               style: TextStyle(
@@ -385,7 +456,7 @@ class _TurfCardState extends State<TurfCard> {
           SizedBox(height: 16),
           Container(
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: Color.fromARGB(255, 255, 255, 255),
               borderRadius: BorderRadius.circular(8),
             ),
             padding: EdgeInsets.all(16),
@@ -425,7 +496,7 @@ class _TurfCardState extends State<TurfCard> {
                                             'Roboto')), // Text color and font family
                                 booking['rem_amount'] == 0
                                     ? Icon(Icons.check_circle_outline,
-                                        color: Colors.green)
+                                        color: const Color.fromARGB(255, 115, 189, 117))
                                     : Icon(Icons.cancel_outlined,
                                         color: Colors.red),
                               ],
@@ -448,6 +519,9 @@ class _TurfCardState extends State<TurfCard> {
                   MaterialPageRoute(
                       builder: (context) => TurfSlots(turf: widget.turf)));
             },
+            style: ElevatedButton.styleFrom(
+          backgroundColor: Color.fromARGB(255, 255, 255, 255), // Green shade
+        ),
             child: Text('Book Now',
                 style: TextStyle(fontFamily: 'Roboto')), // Font family
           ),
