@@ -10,7 +10,7 @@ const connectToMongo = async () => {
     })
     .catch((err) => {
       console.log(err);
-    });
+    })
 };
 
 module.exports = connectToMongo;
