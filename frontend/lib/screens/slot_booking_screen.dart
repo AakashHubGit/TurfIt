@@ -5,8 +5,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../constant.dart';
 
-const DEVANSH_IP = '192.168.1.3';
-
 class TurfSlots extends StatefulWidget {
   final turf;
 

@@ -13,10 +13,12 @@ router.use(express.json());
 
 router.post("/createbooking", fetchUser, async (req, res) => {
   try {
-    const { turfId, date, startTime, endTime, requestedPlayers } = req.body;
+    const { turfId, date, startTime, endTime, requestedPlayers, totalPlayers } =
+      req.body;
     const userId = req.user.id;
     const turf = await Turf.findById(turfId);
     const user = await User.findById(userId);
+
     if (!turf) {
       return res.status(404).json({ message: "Turf not found" });
     }
@@ -39,6 +41,10 @@ router.post("/createbooking", fetchUser, async (req, res) => {
       return res.status(400).json({ message: "Booking collision detected" });
     }
 
+    const totalBookingPrice =
+      price *
+      moment(endTime, "HH:mm").diff(moment(startTime, "HH:mm"), "hours");
+
     const newBooking = new Booking({
       turf: turfId,
       turfName: turfName,
@@ -47,12 +53,9 @@ router.post("/createbooking", fetchUser, async (req, res) => {
       date: serverDate.toDate(),
       startTime: startTime,
       endTime: endTime,
-      price:
-        price *
-        moment(endTime, "HH:mm").diff(moment(startTime, "HH:mm"), "hours"),
-      rem_amount:
-        price *
-        moment(endTime, "HH:mm").diff(moment(startTime, "HH:mm"), "hours"),
+      price: totalBookingPrice,
+      rem_amount: totalBookingPrice,
+      totalPlayers: totalPlayers,
       requestedPlayers: requestedPlayers,
       joinedPlayers: [],
     });
@@ -343,16 +346,33 @@ router.post("/joinbooking", fetchUser, async (req, res) => {
       user: userId,
       userName: user.name,
       playersCount: playersCount,
+      price: 0, // Initial price to be calculated
     });
 
     booking.requestedPlayers -= playersCount;
 
-    const totalPlayers = booking.joinedPlayers.reduce(
-      (total, join) => total + join.playersCount,
-      1
-    );
-    const newPrice = booking.price / totalPlayers;
-    booking.rem_amount = newPrice;
+    // Calculate the total number of players
+    const totalPlayers =
+      booking.joinedPlayers.reduce(
+        (total, join) => total + join.playersCount,
+        0
+      ) + booking.totalPlayers; // Include the booking owner's players
+
+    // Calculate the total price
+    const totalPrice = booking.price;
+
+    // Calculate the new price per player
+    const pricePerPlayer = totalPrice / totalPlayers;
+
+    // Update remaining amount for the owner
+    const ownerShare = pricePerPlayer * booking.totalPlayers;
+    booking.rem_amount = ownerShare;
+
+    // Update remaining amount for each joined player
+    booking.joinedPlayers = booking.joinedPlayers.map((joinedPlayer) => {
+      joinedPlayer.price = pricePerPlayer * joinedPlayer.playersCount;
+      return joinedPlayer;
+    });
 
     await booking.save();
 

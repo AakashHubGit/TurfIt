@@ -4,8 +4,6 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../constant.dart';
 
-const DEVANSH_IP = '192.168.1.3';
-
 class PaymentScreen extends StatelessWidget {
   final dynamic booking;
 

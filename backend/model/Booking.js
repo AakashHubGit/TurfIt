@@ -38,6 +38,10 @@ const BookingSchema = new Schema({
     type: Number,
     required: true,
   },
+  totalPlayers: {
+    type: Number,
+    required: true,
+  },
   requestedPlayers: {
     type: Number,
     required: true,
@@ -47,6 +51,7 @@ const BookingSchema = new Schema({
       user: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
       userName: String,
       playersCount: Number,
+      price: Number,
     },
   ],
 });

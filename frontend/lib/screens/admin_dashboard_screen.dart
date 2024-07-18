@@ -9,8 +9,6 @@ import 'package:turf_it/screens/payment_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constant.dart';
 
-const DEVANSH_IP = '192.168.1.3'; // Replace with your actual IP address
-
 class AdminDashboardScreen extends StatefulWidget {
   @override
   _AdminDashboardScreenState createState() => _AdminDashboardScreenState();
