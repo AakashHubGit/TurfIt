@@ -4,8 +4,6 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constant.dart';
 
-const DEVANSH_IP = '192.168.1.3'; // Replace with your actual IP address
-
 class Analytics extends StatefulWidget {
   @override
   _AnalyticsState createState() => _AnalyticsState();

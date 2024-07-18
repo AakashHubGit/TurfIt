@@ -70,7 +70,7 @@ class BookingItem extends StatelessWidget {
               ),
               Text(
                 '\$${booking['price']}',
-                style: TextStyle(
+                style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.black),
@@ -169,7 +169,7 @@ class _UpcomingBookingState extends State<UpcomingBooking> {
         backgroundColor: Colors.green[600], // Green app bar color
       ),
       body: isLoading
-          ? Center(
+          ? const Center(
               child: CircularProgressIndicator(),
             )
           : sortedDates.isEmpty

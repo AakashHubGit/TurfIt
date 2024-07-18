@@ -4,8 +4,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../constant.dart';
 
-const DEVANSH_IP = '192.168.1.3'; // Replace with your actual IP address
-
 class ReceiptPage extends StatefulWidget {
   @override
   _ReceiptPageState createState() => _ReceiptPageState();

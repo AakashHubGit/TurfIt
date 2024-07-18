@@ -26,7 +26,7 @@ class AccountScreen extends StatelessWidget {
               height: 200,
               width: double.infinity,
               color: Colors.green,
-              child: Column(
+              child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.account_circle, size: 60, color: Colors.white),

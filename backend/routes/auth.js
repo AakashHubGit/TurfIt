@@ -13,7 +13,6 @@ const url = process.env.BASE_URL;
 
 router.use(express.json());
 
-//Route 1  Create a Player
 router.post(
   "/createuser",
   [
@@ -61,33 +60,6 @@ router.post(
   }
 );
 
-//Route 2 Add Player's Number
-router.put("/updatenumber", fetchuser, async (req, res) => {
-  const { number } = req.body;
-
-  try {
-    // Find the user by their ID
-    let user = await User.findById(req.user.id);
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    // Update the number attribute
-    user.number = number;
-
-    // Save the updated user
-    await user.save();
-
-    res.json({ success: true, message: "Number updated successfully" });
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send("Unexpected error occurred");
-  }
-});
-
-//Route 3
-//Authenticate a user
 router.post(
   "/loginuser",
   [
@@ -129,6 +101,30 @@ router.post(
   }
 );
 
+router.put("/updatenumber", fetchuser, async (req, res) => {
+  const { number } = req.body;
+
+  try {
+    // Find the user by their ID
+    let user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Update the number attribute
+    user.number = number;
+
+    // Save the updated user
+    await user.save();
+
+    res.json({ success: true, message: "Number updated successfully" });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Unexpected error occurred");
+  }
+});
+
 router.get("/getuser/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -141,6 +137,7 @@ router.get("/getuser/:id", async (req, res) => {
     res.status(500).send("Unexpected error occurred");
   }
 });
+
 router.get("/getoffuser/:id", async (req, res) => {
   try {
     const user = await OffUser.findById(req.params.id);
@@ -220,7 +217,6 @@ router.post(
   }
 );
 
-// Route 2: Authenticate an Admin
 router.post(
   "/loginadmin",
   [
