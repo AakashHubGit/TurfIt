@@ -26,6 +26,10 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
 
   late AuthModel authModel;
 
+  final _formKey = GlobalKey<FormState>();
+  int totalPlayers = 0;
+  int requestedPlayers = 0;
+
   @override
   void initState() {
     super.initState();
@@ -158,44 +162,48 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
         showErrorDialog('Please select continuous slots.');
         return;
       }
-      final response = await http.post(
-        Uri.parse('${Constants.DEVANSH_IP}/api/booking/createbooking'),
-        headers: {
-          'authToken': authModel.authToken,
-          'Content-Type': 'application/json'
-        },
-        body: json.encode({
-          'turfId': widget.turfId,
-          'date': DateFormat('yyyy-MM-dd').format(date),
-          'startTime': startSlot!.startTime,
-          'endTime': endSlot!.endTime,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('Booking Successful'),
-              content: Text('Your booking has been confirmed.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    Navigator.pushNamed(context, '/receiptPage', arguments: {
-                      'booking': jsonDecode(response.body)['booking'],
-                      'user': 'Player',
-                    });
-                  },
-                  child: Text('View Receipt'),
-                ),
-              ],
-            );
+      if (_formKey.currentState!.validate()) {
+        final response = await http.post(
+          Uri.parse('${Constants.DEVANSH_IP}/api/booking/createbooking'),
+          headers: {
+            'authToken': authModel.authToken,
+            'Content-Type': 'application/json'
           },
+          body: json.encode({
+            'turfId': widget.turfId,
+            'date': DateFormat('yyyy-MM-dd').format(date),
+            'startTime': startSlot!.startTime,
+            'endTime': endSlot!.endTime,
+            'totalPlayers': totalPlayers,
+            'requestedPlayers': requestedPlayers,
+          }),
         );
-      } else {
-        throw Exception('Failed to book slot');
+
+        if (response.statusCode == 200) {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Booking Successful'),
+                content: Text('Your booking has been confirmed.'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.pushNamed(context, '/receiptPage', arguments: {
+                        'booking': jsonDecode(response.body)['booking'],
+                        'user': 'Player',
+                      });
+                    },
+                    child: Text('View Receipt'),
+                  ),
+                ],
+              );
+            },
+          );
+        } else {
+          throw Exception('Failed to book slot');
+        }
       }
     } catch (error) {
       print('Error booking slot: $error');
@@ -214,88 +222,136 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
           : SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Date Selection Section
-                    Text(
-                      'Select Date',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 10),
-                    GestureDetector(
-                      onTap: () => _selectDate(context),
-                      child: Text(
-                        DateFormat.yMMMMd().format(date),
-                        style: TextStyle(fontSize: 16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Date Selection Section
+                      Text(
+                        'Select Date',
+                        style:
+                            TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-                    ),
-                    SizedBox(height: 20),
-
-                    // Available Slots Section
-                    Text(
-                      'Available Slots',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 10),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 2.5,
+                      SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: () => _selectDate(context),
+                        child: Text(
+                          DateFormat.yMMMMd().format(date),
+                          style: TextStyle(fontSize: 16),
+                        ),
                       ),
-                      itemCount: availableSlots.length,
-                      itemBuilder: (context, index) {
-                        Slot slot = availableSlots[index];
-                        bool isSelected = isSlotInRange(slot);
+                      SizedBox(height: 20),
 
-                        return GestureDetector(
-                          onTap: () => handleSlotSelection(slot),
-                          child: Container(
-                            padding: EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color:
-                                  isSelected ? Colors.green : Colors.grey[300],
-                              borderRadius: BorderRadius.circular(5),
-                              border: isSelected
-                                  ? Border.all(color: Colors.green, width: 2)
-                                  : null,
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${DateFormat.jm().format(DateFormat.Hm().parse(slot.startTime))} - ${DateFormat.jm().format(DateFormat.Hm().parse(slot.endTime))}',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color:
-                                      isSelected ? Colors.white : Colors.black,
+                      // Player Count Inputs
+                      Text(
+                        'Total Players',
+                        style:
+                            TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 10),
+                      TextFormField(
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Total Players',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter the total number of players';
+                          }
+                          totalPlayers = int.parse(value);
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 20),
+                      Text(
+                        'Requested Players',
+                        style:
+                            TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 10),
+                      TextFormField(
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Requested Players',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter the requested number of players';
+                          }
+                          requestedPlayers = int.parse(value);
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 20),
+
+                      // Available Slots Section
+                      Text(
+                        'Available Slots',
+                        style:
+                            TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 10),
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                          childAspectRatio: 2.5,
+                        ),
+                        itemCount: availableSlots.length,
+                        itemBuilder: (context, index) {
+                          Slot slot = availableSlots[index];
+                          bool isSelected = isSlotInRange(slot);
+
+                          return GestureDetector(
+                            onTap: () => handleSlotSelection(slot),
+                            child: Container(
+                              padding: EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected ? Colors.green : Colors.grey[300],
+                                borderRadius: BorderRadius.circular(5),
+                                border: isSelected
+                                    ? Border.all(color: Colors.green, width: 2)
+                                    : null,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '${DateFormat.jm().format(DateFormat.Hm().parse(slot.startTime))} - ${DateFormat.jm().format(DateFormat.Hm().parse(slot.endTime))}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.black,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                    if (startSlot != null && endSlot != null)
-                      ElevatedButton(
-                        onPressed: handleSlotDeselection,
-                        child: Text('Deselect Slots'),
+                          );
+                        },
                       ),
-                    SizedBox(height: 20),
-
-                    // Book Selected Slots Button
-                    if (startSlot != null && endSlot != null)
-                      Center(
-                        child: ElevatedButton(
-                          onPressed: handleBooking,
-                          child: Text('Book Selected Slots'),
+                      if (startSlot != null && endSlot != null)
+                        ElevatedButton(
+                          onPressed: handleSlotDeselection,
+                          child: Text('Deselect Slots'),
                         ),
-                      ),
-                  ],
+                      SizedBox(height: 20),
+
+                      // Book Selected Slots Button
+                      if (startSlot != null && endSlot != null)
+                        Center(
+                          child: ElevatedButton(
+                            onPressed: handleBooking,
+                            child: Text('Book Selected Slots'),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -5,6 +5,7 @@ import './turf_detail_screen.dart';
 import '../screens/accounts_screen.dart'; // Import the AccountScreen
 import 'package:turf_it/models/turf.dart';
 import '../constant.dart';
+import 'package:turf_it/user_screens/join_booking_screen.dart'; // Import JoinBookingPage
 
 void main() {
   runApp(MaterialApp(
@@ -92,21 +93,42 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: turfs.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TurfDetail(turf: turfs[index]),
-                      ),
-                    );
-                  },
-                  child: TurfCard(turf: turfs[index]),
-                );
-              },
+          : Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: turfs.length,
+                    itemBuilder: (context, index) {
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  TurfDetail(turf: turfs[index]),
+                            ),
+                          );
+                        },
+                        child: TurfCard(turf: turfs[index]),
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => JoinBookingPage(),
+                        ),
+                      );
+                    },
+                    child: Text('Join a Booking'),
+                  ),
+                ),
+              ],
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

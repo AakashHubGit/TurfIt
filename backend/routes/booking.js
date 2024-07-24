@@ -325,6 +325,15 @@ router.get("/upcomingbookings", fetchUser, async (req, res) => {
   }
 });
 
+router.get("/requested", async (req, res) => {
+  try {
+    const bookings = await Booking.find({ requestedPlayers: { $gt: 0 } });
+    res.status(200).json(bookings);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch bookings" });
+  }
+});
+
 router.post("/joinbooking", fetchUser, async (req, res) => {
   try {
     const { bookingId, playersCount } = req.body;
