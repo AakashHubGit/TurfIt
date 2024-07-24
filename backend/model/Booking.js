@@ -40,11 +40,11 @@ const BookingSchema = new Schema({
   },
   totalPlayers: {
     type: Number,
-    required: true,
+    required: false,
   },
   requestedPlayers: {
     type: Number,
-    required: true,
+    required: false,
   },
   joinedPlayers: [
     {
