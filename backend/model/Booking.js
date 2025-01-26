@@ -5,29 +5,19 @@ const BookingSchema = new Schema({
   turf: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "turf",
-  },
-  turfName: {
-    type: String,
     required: true,
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "user",
-  },
-  userName: {
-    type: String,
     required: true,
   },
   date: {
     type: Date,
     required: true,
   },
-  startTime: {
-    type: String,
-    required: true,
-  },
-  endTime: {
-    type: String,
+  timeSlot: {
+    type: [String],
     required: true,
   },
   price: {
@@ -38,24 +28,19 @@ const BookingSchema = new Schema({
     type: Number,
     required: true,
   },
-  totalPlayers: {
-    type: Number,
-    required: false,
+  timestamp: {
+    type: Date,
+    default: Date.now, // Automatically sets the timestamp
+    required: true,
   },
-  requestedPlayers: {
-    type: Number,
-    required: false,
+  adminId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "admin",
+    required: true,
   },
-  joinedPlayers: [
-    {
-      user: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
-      userName: String,
-      playersCount: Number,
-      price: Number,
-    },
-  ],
 });
 
-const Booking = mongoose.model("booking", BookingSchema);
+const Booking =
+  mongoose.models.booking || mongoose.model("booking", BookingSchema);
 
 module.exports = Booking;

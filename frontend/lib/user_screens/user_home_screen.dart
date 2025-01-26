@@ -2,14 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import './turf_detail_screen.dart';
-import '../screens/accounts_screen.dart'; // Import the AccountScreen
-import 'package:turf_it/models/turf.dart';
+import 'accounts_screen.dart';
+import '../models/turf.dart';
 import '../constant.dart';
-import 'package:turf_it/user_screens/join_booking_screen.dart'; // Import JoinBookingPage
 
 void main() {
   runApp(MaterialApp(
     home: HomeScreen(),
+    theme: ThemeData(
+      primarySwatch: Colors.blue,
+      textTheme: TextTheme(
+        bodyLarge: TextStyle(fontSize: 16, color: Colors.black87),
+        bodyMedium: TextStyle(fontSize: 14, color: Colors.grey[600]),
+      ),
+    ),
   ));
 }
 
@@ -40,37 +46,15 @@ class _HomeScreenState extends State<HomeScreen> {
             .map((turfJson) => Turf(
                   id: turfJson['_id'],
                   name: turfJson['name'],
-                  size: List<String>.from(turfJson['size']),
-                  imgPath: List<String>.from(turfJson['imgPath']),
-                  sports: List<String>.from(turfJson['sports']),
-                  facility: List<String>.from(turfJson['facility']),
-                  rate: double.parse(turfJson['rate'].toString()),
-                  link: turfJson['link'],
-                  booking_start: turfJson['booking_start'],
-                  booking_end: turfJson['booking_end'],
-                  daySlots: (turfJson['daySlots'] as List)
-                      .map((slotJson) => {
-                            'date': DateTime.parse(slotJson['date']),
-                            'slots': (slotJson['slots'] as List)
-                                .map((slot) => {
-                                      'startTime': slot['startTime'],
-                                      'endTime': slot['endTime'],
-                                      'status': slot['status']
-                                    })
-                                .toList()
-                          })
-                      .toList(),
-                  reviews: (turfJson['reviews'] as List)
-                      .map((reviewJson) => {
-                            'review': reviewJson['review'],
-                            'rating': reviewJson['rating'],
-                            'username': reviewJson['username']
-                          })
-                      .toList(),
-                  location: {
-                    'streetName': turfJson['location']['streetName'],
-                    'city': turfJson['location']['city'],
-                  },
+                  size: turfJson['size'],
+                  location: turfJson['location'],
+                  admin: turfJson['admin'],
+                  openTime: turfJson['openTime'],
+                  closeTime: turfJson['closeTime'],
+                  price: double.parse(turfJson['price'].toString()),
+                  slotDuration: int.parse(turfJson['slotDuration'].toString()),
+                  image: List<String>.from(
+                      turfJson['images']), // Parse as a list of Base64 strings
                 ))
             .toList();
         setState(() {
@@ -81,7 +65,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (error) {
       print('Error fetching turfs: $error');
-      // Handle error as needed
     }
   }
 
@@ -89,46 +72,31 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: Text('Home', style: TextStyle(fontWeight: FontWeight.bold)),
+        elevation: 5,
+        backgroundColor: Colors.blueAccent,
+        centerTitle: true,
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: turfs.length,
-                    itemBuilder: (context, index) {
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  TurfDetail(turf: turfs[index]),
-                            ),
-                          );
-                        },
-                        child: TurfCard(turf: turfs[index]),
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                    onPressed: () {
+          : Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: ListView.builder(
+                itemCount: turfs.length,
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                    onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => JoinBookingPage(),
+                          builder: (context) => TurfDetail(turf: turfs[index]),
                         ),
                       );
                     },
-                    child: Text('Join a Booking'),
-                  ),
-                ),
-              ],
+                    child: TurfCard(turf: turfs[index]),
+                  );
+                },
+              ),
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -139,7 +107,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         },
-        child: Icon(Icons.account_circle),
+        backgroundColor: Colors.blueAccent,
+        child: Icon(Icons.account_circle, size: 30),
       ),
     );
   }
@@ -153,69 +122,81 @@ class TurfCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.all(10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Turf Image Carousel
-          Container(
-            height: 200,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: turf.imgPath.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: EdgeInsets.all(5),
-                  width: 300,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    image: DecorationImage(
-                      image: AssetImage('assets/' + turf.imgPath[index]),
-                      // image: NetworkImage("assets/" + turf.imgPath[index]),
+      margin: EdgeInsets.symmetric(vertical: 8.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      elevation: 10,
+      shadowColor: Colors.grey.withOpacity(0.3),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Display the first image from the images array
+            ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: turf.image.isNotEmpty
+                  ? Image.memory(
+                      base64Decode(
+                          turf.image[0]), // Decode the first Base64 image
+                      height: 100,
+                      width: 100,
                       fit: BoxFit.cover,
+                    )
+                  : Container(
+                      height: 100,
+                      width: 100,
+                      color: Colors.grey[300],
+                      child: Icon(
+                        Icons.image_not_supported,
+                        color: Colors.grey[600],
+                        size: 50,
+                      ),
+                    ),
+            ),
+            SizedBox(width: 16),
+            // Display the turf details on the right
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    turf.name,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                );
-              },
-            ),
-          ),
-          // Turf Details
-          Padding(
-            padding: EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  turf.name,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  'Rate: \$${turf.rate.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.green,
-                  ),
-                ),
-                SizedBox(height: 5),
-                Text('Sports: ${turf.sports.join(", ")}'),
-                SizedBox(height: 5),
-                Text('Facility: ${turf.facility.join(", ")}'),
-                SizedBox(height: 5),
-                Text(
-                    'Booking Hours: ${turf.booking_start} - ${turf.booking_end}'),
-                SizedBox(height: 5),
-                if (turf.location.containsKey('streetName') &&
-                    turf.location.containsKey('city'))
+                  SizedBox(height: 6),
                   Text(
-                      'Location: ${turf.location["streetName"]}, ${turf.location["city"]}'),
-              ],
+                    'Size: ${turf.size}',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                  ),
+                  SizedBox(height: 6),
+                  Text(
+                    'Location: ${turf.location}',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                  ),
+                  SizedBox(height: 6),
+                  Text(
+                    'Price: ₹${turf.price.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.green[700],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 6),
+                  Text(
+                    'Booking Hours: ${turf.openTime} - ${turf.closeTime}',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

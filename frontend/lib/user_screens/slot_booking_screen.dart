@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:turf_it/models/auth_model.dart';
+import 'package:turf_it/models/slot_model.dart';
+import 'package:turf_it/services/slot_service.dart';
 import 'package:turf_it/user_screens/user_home_screen.dart';
-import '../models/auth_model.dart';
-import '../models/slot_model.dart';
-import '../constant.dart';
 
 class SlotBookingScreen extends StatefulWidget {
   final String turfId;
@@ -25,96 +22,59 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
   Slot? startSlot;
   Slot? endSlot;
   bool loading = true;
-
   late AuthModel authModel;
+  late SlotService slotService;
 
   @override
   void initState() {
     super.initState();
+    slotService = SlotService();
     fetchAuthToken();
   }
 
   Future<void> fetchAuthToken() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? authToken = prefs.getString('authToken');
-    if (authToken == null) {
-      showErrorDialog('Authentication failed. Please log in again.');
-    } else {
-      authModel = AuthModel(id: 1, authToken: authToken);
+    try {
+      authModel = await slotService.fetchAuthToken();
       fetchSlots();
+    } catch (error) {
+      showErrorDialog('Authentication failed. Please log in again.');
     }
   }
 
   Future<void> fetchSlots() async {
     try {
-      final response = await http.get(
-        Uri.parse(
-            '${Constants.DEVANSH_IP}/api/turf/${widget.turfId}/slots?date=${DateFormat('yyyy-MM-dd').format(date)}'),
-        headers: {'Authorization': 'Bearer ${authModel.authToken}'},
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          slots = (data['data']['slots'] as List)
-              .map((slot) => Slot.fromJson(slot))
-              .toList();
-          loading = false;
-        });
-        fetchBookedSlots();
-      } else {
-        throw Exception('Failed to fetch slots: ${response.reasonPhrase}');
-      }
+      final fetchedSlots = await slotService.fetchSlots(
+          widget.turfId, authModel.authToken, date);
+      setState(() {
+        slots = fetchedSlots;
+        loading = false;
+      });
+      fetchBookedSlots();
     } catch (error) {
-      print('Error fetching slots: $error');
       showErrorDialog('Failed to fetch slot data. Please try again later.');
     }
   }
 
   Future<void> fetchBookedSlots() async {
     try {
-      final response = await http.get(
-        Uri.parse(
-            '${Constants.DEVANSH_IP}/api/booking/${widget.turfId}/booked-slots?date=${DateFormat('yyyy-MM-dd').format(date)}'),
-        headers: {'Authorization': 'Bearer ${authModel.authToken}'},
-      );
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final bookedSlotsData = (data['data']['bookedSlots'] as List)
-            .map((slot) => Slot.fromJson(slot))
-            .toList();
-
-        setState(() {
-          slots = slots.map((slot) {
-            if (bookedSlotsData.any((bookedSlot) => isTimeOverlapping(
-                slot.startTime,
-                slot.endTime,
-                bookedSlot.startTime,
-                bookedSlot.endTime))) {
-              slot.isBooked = true;
-            }
-            return slot;
-          }).toList();
-        });
-      } else {
-        throw Exception(
-            'Failed to fetch booked slots: ${response.reasonPhrase}');
-      }
+      final bookedSlots = await slotService.fetchBookedSlots(
+          widget.turfId, authModel.authToken, date);
+      setState(() {
+        slots = slots.map((slot) {
+          if (bookedSlots.any((bookedSlot) => slotService.isTimeOverlapping(
+              slot.startTime,
+              slot.endTime,
+              bookedSlot.startTime,
+              bookedSlot.endTime))) {
+            slot.isBooked = true;
+          }
+          return slot;
+        }).toList();
+      });
     } catch (error) {
-      print('Error fetching booked slots: $error');
       showErrorDialog(
           'Failed to fetch booked slot data. Please try again later.');
     }
-  }
-
-  bool isTimeOverlapping(
-      String start1, String end1, String start2, String end2) {
-    final startTime1 = DateFormat.Hm().parse(start1);
-    final endTime1 = DateFormat.Hm().parse(end1);
-    final startTime2 = DateFormat.Hm().parse(start2);
-    final endTime2 = DateFormat.Hm().parse(end2);
-
-    return startTime1.isBefore(endTime2) && endTime1.isAfter(startTime2);
   }
 
   void showErrorDialog(String message) {
@@ -187,17 +147,11 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
     final startSlotTime = DateFormat.Hm().parse(startSlot!.startTime);
     final endSlotTime = DateFormat.Hm().parse(endSlot!.endTime);
 
-    if (startSlotTime.isBefore(endSlotTime)) {
-      return slotStartTime.isAtSameMomentAs(startSlotTime) ||
-          slotEndTime.isAtSameMomentAs(endSlotTime) ||
-          (slotStartTime.isAfter(startSlotTime) &&
-              slotEndTime.isBefore(endSlotTime));
-    } else {
-      return slotStartTime.isAtSameMomentAs(endSlotTime) ||
-          slotEndTime.isAtSameMomentAs(startSlotTime) ||
-          (slotStartTime.isAfter(endSlotTime) &&
-              slotEndTime.isBefore(startSlotTime));
-    }
+    return (startSlotTime.isBefore(endSlotTime)) &&
+        (slotStartTime.isAtSameMomentAs(startSlotTime) ||
+            slotEndTime.isAtSameMomentAs(endSlotTime) ||
+            (slotStartTime.isAfter(startSlotTime) &&
+                slotEndTime.isBefore(endSlotTime)));
   }
 
   Future<void> handleBooking() async {
@@ -208,81 +162,51 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
       }
 
       List<String> timeSlots =
-          _generateTimeSlots(startSlot!.startTime, endSlot!.endTime);
+          slotService.generateTimeSlots(startSlot!.startTime, endSlot!.endTime);
 
       if (timeSlots.isEmpty) {
         showErrorDialog('Invalid slot selection.');
         return;
       }
 
-      final response = await http.post(
-        Uri.parse('${Constants.DEVANSH_IP}/api/booking/createbooking'),
-        headers: {
-          'authToken': '${authModel.authToken}',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode({
-          'turfId': widget.turfId,
-          'date': utcBookingDate.toIso8601String(),
-          'timeSlots': timeSlots,
-          'adminId': widget.adminId,
-        }),
-      );
+      await slotService.handleBooking(widget.turfId, widget.adminId,
+          utcBookingDate, timeSlots, authModel.authToken);
 
-      if (response.statusCode == 200) {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('Booking Successful'),
-              content: Text('Your booking has been confirmed.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => HomeScreen(),
-                      ),
-                    );
-                  },
-                  child: Text('Back to Home'),
-                ),
-              ],
-            );
-          },
-        );
-      } else {
-        throw Exception('Failed to book slot: ${response.reasonPhrase}');
-      }
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Booking Successful'),
+            content: Text('Your booking has been confirmed.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HomeScreen(),
+                    ),
+                  );
+                },
+                child: Text('Back to Home'),
+              ),
+            ],
+          );
+        },
+      );
     } catch (error) {
-      print('Error booking slot: $error');
       showErrorDialog('Failed to book slot. Please try again later.');
     }
-  }
-
-  List<String> _generateTimeSlots(String startTime, String endTime) {
-    final start = DateFormat('HH:mm').parse(startTime);
-    final end = DateFormat('HH:mm').parse(endTime);
-
-    List<String> timeSlots = [];
-    DateTime current = start;
-
-    while (current.isBefore(end)) {
-      final next = current.add(Duration(hours: 1));
-      timeSlots.add(
-          '${DateFormat('HH:mm').format(current)}-${DateFormat('HH:mm').format(next)}');
-      current = next;
-    }
-
-    return timeSlots;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Slot Booking'),
+        backgroundColor: Colors.blueAccent,
+        title:
+            Text('Slot Booking', style: TextStyle(fontWeight: FontWeight.bold)),
+        elevation: 0,
       ),
       body: loading
           ? Center(child: CircularProgressIndicator())
@@ -294,22 +218,29 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
                   children: [
                     Text(
                       'Select Date',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueAccent),
                     ),
                     SizedBox(height: 10),
                     GestureDetector(
                       onTap: () => _selectDate(context),
                       child: Text(
                         DateFormat.yMMMMd().format(date),
-                        style: TextStyle(fontSize: 16),
+                        style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.blue,
+                            fontWeight: FontWeight.w500),
                       ),
                     ),
                     SizedBox(height: 20),
                     Text(
                       'Available Slots',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueAccent),
                     ),
                     SizedBox(height: 10),
                     GridView.builder(
@@ -325,7 +256,8 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
 
                         return GestureDetector(
                           onTap: () => handleSlotSelection(slot),
-                          child: Container(
+                          child: AnimatedContainer(
+                            duration: Duration(milliseconds: 300),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: slot.isBooked
@@ -333,13 +265,20 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
                                   : isSelected
                                       ? Colors.green
                                       : Colors.blue,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: Text(
                               '${slot.startTime}-${slot.endTime}',
                               style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 12,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -349,8 +288,20 @@ class _SlotBookingScreenState extends State<SlotBookingScreen> {
                     SizedBox(height: 20),
                     Center(
                       child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 50, vertical: 15),
+                        ),
                         onPressed: handleBooking,
-                        child: Text('Book Slot'),
+                        child: Text(
+                          'Book Slot',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                   ],

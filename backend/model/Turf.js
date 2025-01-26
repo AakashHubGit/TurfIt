@@ -1,93 +1,49 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-const ReviewSchema = new Schema({
-  review: {
-    type: String,
-    required: true,
-  },
-  rating: {
-    type: Number,
-    required: true,
-  },
-  username: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "user",
-  },
-});
-
-const LocationSchema = new Schema({
-  streetName: {
-    type: String,
-    required: true,
-  },
-  city: {
-    type: String,
-    required: true,
-  },
-});
-
-const SlotSchema = new mongoose.Schema({
-  startTime: { type: String, required: true },
-  endTime: { type: String, required: true },
-  status: { type: String, enum: ["available", "booked"], required: true },
-});
-
-const DaySlotSchema = new mongoose.Schema({
-  date: { type: Date, required: true },
-  slots: [SlotSchema], // SlotSchema from your existing model
-});
-
+// Turf Schema
 const TurfSchema = new Schema({
+  size: {
+    type: String, // Changed from array to a single string
+    required: true,
+  },
   admin: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "admin",
+    required: true,
   },
   name: {
     type: String,
     required: true,
   },
-  size: {
-    type: [String],
+  location: {
+    type: String, // Simplified location from nested schema to a single string
     required: true,
   },
-  imgPath: {
-    type: [String],
-    required: true,
-  },
-  sports: {
-    type: [String],
-    required: true,
-  },
-  facility: {
-    type: [String],
-    required: true,
-  },
-  rate: {
-    type: Number,
-    required: true,
-  },
-  link: {
+  openTime: {
     type: String,
     required: true,
   },
-  booking_start: {
+  closeTime: {
+    type: String,
+    required: true,
+  },
+  price: {
+    type: Number, // Renamed "rate" to "price" for consistency
+    required: true,
+  },
+  slotDuration: {
     type: Number,
     required: true,
   },
-  booking_end: {
-    type: Number,
-    required: true,
-  },
-  daySlots: [DaySlotSchema],
-  reviews: [ReviewSchema],
-  location: LocationSchema,
-  date: {
+  images: [String],
+  timeStamp: {
     type: Date,
+    required: true,
     default: Date.now,
   },
 });
-const Review = mongoose.model("review", ReviewSchema);
+
 const Turf = mongoose.model("turf", TurfSchema);
 
-module.exports = { Turf, Review };
+module.exports = Turf;
