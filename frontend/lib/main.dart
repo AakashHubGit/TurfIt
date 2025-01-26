@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:turf_it/user_screens/user_home_screen.dart';
+import 'package:frontend/user_screens/user_home_screen.dart';
 import 'user_screens/login_screen.dart';
 import 'user_screens/reg_screen.dart';
 

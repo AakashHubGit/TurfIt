@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:turf_it/user_screens/user_home_screen.dart';
+import 'package:frontend/user_screens/user_home_screen.dart';
 import '../models/auth_model.dart';
 import '../models/slot_model.dart';
 import '../constant.dart';

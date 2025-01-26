@@ -47,6 +47,12 @@ router.post("/createbooking", fetchUser, async (req, res) => {
     // Save booking
     await newBooking.save();
 
+    // Update the user's adminId if not already present
+    if (!user.adminId.includes(adminId)) {
+      user.adminId.push(adminId);
+      await user.save(); // Save the updated user document
+    }
+
     res.status(200).json({
       message: "Booking created successfully",
       booking: newBooking,

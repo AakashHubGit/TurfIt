@@ -31,13 +31,13 @@ class AccountScreen extends StatelessWidget {
                 children: [
                   Icon(Icons.account_circle, size: 60, color: Colors.white),
                   SizedBox(height: 10),
-                  Text('Owner',
+                  Text('Player',
                       style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Colors.white)),
                   SizedBox(height: 5),
-                  Text('Owner Email',
+                  Text('Player Email',
                       style: TextStyle(fontSize: 16, color: Colors.white)),
                 ],
               ),

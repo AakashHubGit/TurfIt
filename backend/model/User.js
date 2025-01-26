@@ -23,6 +23,11 @@ const UserSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  adminId: {
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: "admin",
+    required: false,
+  },
 });
 const User = mongoose.model("user", UserSchema);
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:turf_it/models/auth_model.dart';
-import 'package:turf_it/models/slot_model.dart';
-import 'package:turf_it/services/slot_service.dart';
-import 'package:turf_it/user_screens/user_home_screen.dart';
+import 'package:frontend/models/auth_model.dart';
+import 'package:frontend/models/slot_model.dart';
+import 'package:frontend/services/slot_service.dart';
+import 'package:frontend/user_screens/user_home_screen.dart';
 
 class SlotBookingScreen extends StatefulWidget {
   final String turfId;

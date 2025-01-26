@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:turf_it/models/turf.dart';
-import 'package:turf_it/user_screens/slot_booking_screen.dart';
+import 'package:frontend/models/turf.dart';
+import 'package:frontend/user_screens/slot_booking_screen.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
 class TurfDetail extends StatelessWidget {
